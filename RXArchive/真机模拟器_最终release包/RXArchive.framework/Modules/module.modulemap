@@ -1,0 +1,6 @@
+framework module RXArchive {
+  umbrella header "RXArchive.h"
+
+  export *
+  module * { export * }
+}

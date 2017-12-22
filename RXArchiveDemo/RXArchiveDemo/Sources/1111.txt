@@ -1,0 +1,42 @@
+private static final Logger logger = LoggerFactory.getLogger(UserInfoController.class); 
+
+@RequestMapping("/login") 
+ @ResponseBody
+ public String login(HttpServletRequest request,HttpServletResponse response,Model model,Account account){ 
+  logger.info("用户尝试登录："+JSON.toJSONString(account)); 
+  if(account==null){ 
+    return responseFail("提交的参数为空!"); 
+  }else{ 
+   if(StringUtils.isBlank(account.getAccountnumber())){ 
+    return responseFail("用户的账号为空"); 
+   } 
+   if(StringUtils.isBlank(account.getPasswords())){ 
+    return responseFail("用户的密码为空"); 
+   } 
+   LoginBean loginBean = null; 
+   loginBean = serviceFactory.getUserValidateService().userislawable(account); 
+   if(loginBean==null){ 
+    return responseFail("用户名或者密码输入不正确"); 
+   }else{// 如果成功 
+    // 把loginbean放到session中 
+    request.getSession().setAttribute("user", loginBean); 
+    // 放到cookie中 
+    String flag = request.getParameter("flag"); 
+    // 如果需要记住账户就存储账号和密码 
+    if(flag!=null&&flag.equals("1")){ 
+     Cookie cookie = new Cookie("cookie_user",loginBean.getAccountnumber()+"-"+loginBean.getPasswords()); 
+     cookie.setMaxAge(60*60*24*3);// 保存 
+     response.addCookie(cookie); 
+     logger.info("存储用户的cookie:"+loginBean.getAccountnumber()+"-"+loginBean.getPasswords()); 
+    }else{// 如果没有要求记住账户密码，就保存账户 
+     Cookie cookie = new Cookie("cookie_user", loginBean.getAccountnumber()); 
+     cookie.setMaxAge(60*60*24*30); 
+     response.addCookie(cookie); 
+     logger.info("存储用户的cookie:"+loginBean.getAccountnumber()); 
+    } 
+    // 跳转到主页    
+    logger.info("用户："+loginBean.getAccountnumber()+"成功进入系统");  
+    return responseSuccess(loginBean, "登录成功"); 
+   } 
+  } 
+ } 
